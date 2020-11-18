@@ -1,0 +1,28 @@
+   File Name		Archive #	Description
+-----------------------------------------------------------
+ MANIFEST                  1	This shipping list
+ Makefile                  3	
+ README                    1	
+ README2                   3	
+ advavl.c                  3	
+ advavl.h                  3	
+ advcom.c                  1	
+ advcom.h                  3	
+ advdbs.c                  2	
+ advdbs.h                  3	
+ advexe.c                  3	
+ advexp.c                  2	
+ advfcn.c                  2	
+ advfio.c                  3	
+ advint.c                  3	
+ advint.h                  1	
+ advjunk.c                 3	
+ advmsg.c                  3	
+ advprs.c                  3	
+ advscn.c                  1	
+ advsys.doc                1	
+ advtrm.c                  3	
+ newadv.pch                3	
+ objects.adi               2	
+ osample.adv               2	
+ readme.1st                3	
