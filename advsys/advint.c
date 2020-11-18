@@ -5,80 +5,81 @@
 	All rights reserved
 */
 
+#include "header.h"
+
 #include "advint.h"
 #include "advdbs.h"
-#ifndef MAC
-#include <setjmp.h>
-#endif
+
 
 /* global variables */
 jmp_buf restart;
 
-/* external variables */
-extern int h_init;
-extern int h_update;
-extern int h_before;
-extern int h_after;
-extern int h_error;
+/* CHANGED TO WORK WITH GLK */
+/* Modernize it */
+void play(void);
+int single_action(void);
+
+/* GLK Specifics */
+winid_t window;
+strid_t screen;
+
+extern char *gas_filename;
 
 /* main - the main routine */
-main(argc,argv)
-  int argc; char *argv[];
+void glk_main()
 {
     char *fname,*lname;
-    int rows,cols,i;
+    int rows,cols;
 
-#ifdef MAC
-    char name[50];
-    macinit(name);
-    fname = name;
-    lname = NULL;
-    rows = 20;
-    cols = 80;
+	strid_t file;
+
+	window = glk_window_open(0, 0, 0, wintype_TextBuffer, WINDOW);
+	screen = glk_window_get_stream(window);
+	glk_stream_set_current(screen);
+
+#ifdef GARGLK
+	garglk_set_program_name("AdvSys 1.2");
+	garglk_set_program_info(
+			"ADVINT v1.2 - Copyright (c) 1986 by David Betz\n"
+			"GLK Build v0.1 - Copyright (c) 2000 by Zenki\n"
+			"Gargoyle tweaks by Tor Andersson");
 #else
-    printf("ADVINT v1.2 - Copyright (c) 1986, by David Betz\n");
+
+#ifdef WINDOWS
+    glk_put_string("ADVINT v1.2 - Copyright (c) 1986, by David Betz\n"
+		           "GLK Build v0.1 - Copyright (c) 2000  by Zenki\n\n");
+#endif
+#ifdef UNIX
+    glk_put_string("ADVINT v1.2 - Copyright (c) 1986, by David Betz\n"
+                   "GLK Build v0.1 - Copyright(c) 2000 by Zenki\n\n");
+#endif
+#endif
+
     fname = NULL;
     lname = NULL;
     rows = 24;
     cols = 80;
 
-    /* parse the command line */
-    for (i = 1; i < argc; i++)
-	if (argv[i][0] == '-')
-	    switch (argv[i][1]) {
-	    case 'r':
-	    case 'R':
-		    rows = atoi(&argv[i][2]);
-		    break;
-	    case 'c':
-	    case 'C':
-		    cols = atoi(&argv[i][2]);
-		    break;
-	    case 'l':
-	    case 'L':
-		    lname = &argv[i][2];
-	    	    break;
-	    }
-	else
-	    fname = argv[i];
-    if (fname == NULL) {
-	printf("usage: advint [-r<rows>] [-c<columns>] [-l<log-file>] <file>\n");
-	exit();
-    }
-#endif
-
     /* initialize terminal i/o */
     trm_init(rows,cols,lname);
 
+	/* Get the file reference. */
+	if (!gas_filename)
+		error("AdvSys: No file given");
+
+	file = glkunix_stream_open_pathname(gas_filename, 0, SOURCEFILE);
+
+/* END OF CHANGES FOR GLK */
+
     /* initialize the database */
-    db_init(fname);
+    db_init(file);
 
     /* play the game */
     play();
 }
 
 /* play - the main loop */
-play()
+void play()
 {
     /* establish the restart point */
     setjmp(restart);
@@ -94,8 +95,8 @@ play()
 
 	/* parse the next input command */
 	if (parse()) {
-	    if (single())
-		while (next() && single())
+	    if (single_action())
+		while (next() && single_action())
 		    ;
 	}
 
@@ -105,8 +106,8 @@ play()
     }
 }
 
-/* single - handle a single action */
-int single()
+/* single_action - handle a single action */
+int single_action()
 {
     /* execute the before code */
     switch (execute(h_before)) {
@@ -124,10 +125,9 @@ int single()
 }
 
 /* error - print an error message and exit */
-error(msg)
-  char *msg;
+void error(char *msg)
 {
     trm_str(msg);
     trm_chr('\n');
-    exit();
+    glk_exit();
 }

@@ -5,6 +5,7 @@
 	All rights reserved
 */
 
+#include "header.h"
 #include "advint.h"
 #include "advdbs.h"
 
@@ -33,6 +34,18 @@ static int nptr;	/* noun pointer (actually, an index) */
 static int adjs[100]; 	/* adjective lists */
 static int anums[100];	/* adjective word numbers */
 static int aptr;	/* adjective pointer (actually, an index) */
+
+
+/* Function Headers */
+int parse1();
+int getverb();
+int getnoun();
+int get_line();
+int skip_spaces();
+void show_noun(int n);
+int get_word();
+int spacep(int ch);
+void parse_error();
 
 /* parse - read and parse an input line */
 int parse()
@@ -229,7 +242,7 @@ int getnoun()
 	anums[aptr] = wptr - words - 1;
 	aptr++;
     }
-    adjs[aptr++] = NULL;
+    adjs[aptr++] = 0;
 
     /* get the noun itself */
     if (*wptr == NIL || wtype(*wptr) != WT_NOUN) {
@@ -247,7 +260,7 @@ int getnoun()
 int get_line()
 {
     /* read an input line */
-    trm_chr(':');
+    trm_chr('>');
     if ((lptr = trm_get(line)) == NULL) {
 	trm_str("Speak up!  I can't hear you!\n");
 	return (FALSE);
@@ -279,8 +292,7 @@ int skip_spaces()
 }
 
 /* show_noun - show a noun phrase */
-show_noun(n)
-  int n;
+void show_noun(int n)
 {
     int adj,*p;
 
@@ -317,15 +329,13 @@ int get_word()
 }
 
 /* spacep - is this character a space? */
-int spacep(ch)
-  int ch;
+int spacep(int ch)
 {
     return (ch == ' ' || ch == ',' || ch == '.');
 }
 
 /* parse_error - announce a parsing error */
-parse_error()
+void parse_error()
 {
     trm_str("I don't understand.\n");
 }
-
