@@ -17,7 +17,7 @@
     in interface.c or the memory-allocation code in util.c.  If you
     find yourself needing to do more than that, get in touch with me.)  */
 
-
+#undef _WIN32 /* GARGLK */
 
 
 /* Default to PLAIN platform */
@@ -281,6 +281,37 @@
 #define WRITEFLAG (O_WRONLY|O_CREAT|O_TRUNC)
 #define FILE_PERM 0
 #undef PLAIN
+#endif
+
+
+/*
+ * The Glk port is very similar to plain ASCII, to give it the best
+ * chance at success on multiple Glk platforms.  The only basic change
+ * is to turn off IBM character translations; Glk works in ISO 8859
+ * Latin-1, which can offer slightly closer translation of the IBM
+ * code page 437 characters that the simpler mappings in the core
+ * AGiliTy code.  The os_glk.c module handles the translations.
+ */
+#ifdef GLK  
+#define NEED_STR_CMP			/* Inherited from PLAIN. */
+#define NEED_STRN_CMP			/* Inherited from PLAIN. */
+#define BUFF_SIZE	0		/* Inherited from PLAIN. */
+#define CBUF_SIZE	(5000L)		/* Inherited from PLAIN. */
+#define INBUFF_SIZE	(1024)		/* Inherited from PLAIN. */
+#define fix_ascii	0		/* os_glk.c does translations. */
+#define MAXSTRUC	(1024L*1024L)	/* 32Kb from PLAIN is too small for
+					   several games (including Soggy). */
+#define PORTSTR		"Glk version"	/* Identify ourselves discreetly. */
+#define REPLACE_GETFILE			/* Override get_user_file. */
+#define REPLACE_MAIN			/* Override main. */
+#define fnamecmp	strcasecmp	/* Case insensitive filename compare. */
+#undef PLAIN
+
+#ifdef __APPLE__
+#undef NEED_STR_CMP
+#undef NEED_STRN_CMP
+#endif /* __APPLE__ */
+
 #endif
 
 
