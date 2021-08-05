@@ -26,7 +26,7 @@ extern BPTR cd;
 #endif
 
 #ifndef PROGNAME
-#define PROGNAME "arun"
+#define PROGNAME "alan2"
 #endif
 
 #ifdef _PROTOTYPES_

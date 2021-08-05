@@ -8,6 +8,8 @@
 
 #include "types.h"
 
+#include "glk.h"
+
 #ifdef USE_READLINE
 #include "readline.h"
 #endif
@@ -119,7 +121,7 @@ void sys(fpos, len)
 
   getstr(fpos, len);            /* Returns address to string on stack */
   command = (char *)pop();
-  system(command);
+  int tmp = system(command);
   free(command);
 }
 
@@ -133,7 +135,7 @@ void getstr(fpos, len)
 {
   char *buf = allocate(len+1);
 
-  push((Aword) buf);            /* Push the address to the string */
+  push((Aptr) buf);            /* Push the address to the string */
   fseek(txtfil, fpos, 0);       /* Position to start of text */
   if (header->pack)
     startDecoding();
@@ -161,7 +163,7 @@ void score(sc)
     sprintf(buf, "%d", cur.score);
     output(buf);
     prmsg(M_SCORE2);
-    sprintf(buf, "%ld.", header->maxscore);
+    sprintf(buf, "%ld.", (unsigned long) header->maxscore);
     output(buf);
   } else {
     cur.score += scores[sc-1];
@@ -312,12 +314,12 @@ void schedule(evt, whr, aft)
 
  */
 #ifdef _PROTOTYPES_
-static Aword getatr(
+static Aptr getatr(
      Aaddr atradr,              /* IN - ACODE address to attribute table */
      Aaddr atr                  /* IN - The attribute to read */
 )
 #else
-static Aword getatr(atradr, atr)
+static Aptr getatr(atradr, atr)
      Aaddr atradr;              /* IN - ACODE address to attribute table */
      Aaddr atr;                 /* IN - The attribute to read */
 #endif
@@ -409,7 +411,7 @@ void make(id, atr, val)
   else if (isAct(id))
     makact(id, atr, val);
   else {
-    sprintf(str, "Can't MAKE item (%ld).", id);
+    sprintf(str, "Can't MAKE item (%ld).", (unsigned long) id);
     syserr(str);
   }
 }
@@ -470,7 +472,7 @@ void set(id, atr, val)
   else if (isAct(id))
     setact(id, atr, val);
   else {
-    sprintf(str, "Can't SET item (%ld).", id);
+    sprintf(str, "Can't SET item (%ld).", (unsigned long) id);
     syserr(str);
   }
 }
@@ -569,7 +571,7 @@ void incr(id, atr, step)
   else if (isAct(id))
     incract(id, atr, step);
   else {
-    sprintf(str, "Can't INCR item (%ld).", id);
+    sprintf(str, "Can't INCR item (%ld).", (unsigned long) id);
     syserr(str);
   }
 }
@@ -590,7 +592,7 @@ void decr(id, atr, step)
   else if (isAct(id))
     incract(id, atr, -step);
   else {
-    sprintf(str, "Can't DECR item (%ld).", id);
+    sprintf(str, "Can't DECR item (%ld).", (unsigned long) id);
     syserr(str);
   }
 }
@@ -604,9 +606,9 @@ void decr(id, atr, step)
   */
 
 #ifdef _PROTOTYPES_
-static Aword locatr(Aword loc, Aword atr)
+static Aptr locatr(Aword loc, Aword atr)
 #else
-static Aword locatr(loc, atr)
+static Aptr locatr(loc, atr)
      Aword loc, atr;
 #endif
 {
@@ -616,9 +618,9 @@ static Aword locatr(loc, atr)
 
 
 #ifdef _PROTOTYPES_
-static Aword objatr(Aword obj, Aword atr)
+static Aptr objatr(Aword obj, Aword atr)
 #else
-static Aword objatr(obj, atr)
+static Aptr objatr(obj, atr)
      Aword obj, atr;
 #endif
 {
@@ -626,9 +628,9 @@ static Aword objatr(obj, atr)
 }
 
 #ifdef _PROTOTYPES_
-static Aword actatr(Aword act, Aword atr)
+static Aptr actatr(Aword act, Aword atr)
 #else
-static Aword actatr(act, atr)
+static Aptr actatr(act, atr)
      Aword act, atr;
 #endif
 {
@@ -636,9 +638,9 @@ static Aword actatr(act, atr)
 }
 
 #ifdef _PROTOTYPES_
-static Aword litatr(Aword lit, Aword atr)
+static Aptr litatr(Aword lit, Aword atr)
 #else
-static Aword litatr(lit, atr)
+static Aptr litatr(lit, atr)
      Aword lit, atr;
 #endif
 {
@@ -647,7 +649,7 @@ static Aword litatr(lit, atr)
   if (atr == 1)
     return litValues[lit-LITMIN].value;
   else {
-    sprintf(str, "Unknown attribute for literal (%ld).", atr);
+    sprintf(str, "Unknown attribute for literal (%ld).", (unsigned long) atr);
     syserr(str);
   }
   return(EOF);
@@ -655,9 +657,9 @@ static Aword litatr(lit, atr)
 
 
 #ifdef _PROTOTYPES_
-Aword attribute(Aword id, Aword atr)
+Aptr attribute(Aword id, Aword atr)
 #else
-Aword attribute(id, atr)
+Aptr attribute(id, atr)
      Aword id, atr;
 #endif
 {
@@ -672,7 +674,7 @@ Aword attribute(id, atr)
   else if (isLit(id))
     return litatr(id, atr);
   else {
-    sprintf(str, "Can't ATTRIBUTE item (%ld).", id);
+    sprintf(str, "Can't ATTRIBUTE item (%ld).", (unsigned long) id);
     syserr(str);
   }
   return(EOF);
@@ -680,13 +682,13 @@ Aword attribute(id, atr)
 
 
 #ifdef _PROTOTYPES_
-Aword strattr(Aword id, Aword atr)
+Aptr strattr(Aword id, Aword atr)
 #else
-Aword strattr(id, atr)
+Aptr strattr(id, atr)
      Aword id, atr;
 #endif
 {
-  return (Aword) strdup((char *)attribute(id, atr));
+  return (Aptr) strdup((char *)attribute(id, atr));
 }
 
 
@@ -738,7 +740,7 @@ Aword where(id)
   else if (isAct(id))
     return actloc(id);
   else {
-    sprintf(str, "Can't WHERE item (%ld).", id);
+    sprintf(str, "Can't WHERE item (%ld).", (unsigned long) id);
     syserr(str);
   }
   return(EOF);
@@ -895,7 +897,7 @@ void locate(id, whr)
   else if (isAct(id))
     locact(id, whr);
   else {
-    sprintf(str, "Can't LOCATE item (%ld).", id);
+    sprintf(str, "Can't LOCATE item (%ld).", (unsigned long) id);
     syserr(str);
   }
 }
@@ -936,9 +938,9 @@ static Aword acthere(act)
 
 
 #ifdef _PROTOTYPES_
-Aword isHere(Aword id)
+Abool isHere(Aword id)
 #else
-Aword isHere(id)
+Abool isHere(id)
      Aword id;
 #endif
 {
@@ -949,7 +951,7 @@ Aword isHere(id)
   else if (isAct(id))
     return acthere(id);
   else {
-    sprintf(str, "Can't HERE item (%ld).", id);
+    sprintf(str, "Can't HERE item (%ld).", (unsigned long) id);
     syserr(str);
   }
   return(EOF);
@@ -1003,7 +1005,7 @@ Abool isNear(id)
   else if (isAct(id))
     return actnear(id);
   else {
-    sprintf(str, "Can't NEAR item (%ld).", id);
+    sprintf(str, "Can't NEAR item (%ld).", (unsigned long) id);
     syserr(str);
   }
   return(EOF);
@@ -1082,7 +1084,7 @@ void sayint(val)
   char buf[25];
 
   if (isHere(HERO)) {
-    sprintf(buf, "%ld", val);
+    sprintf(buf, "%ld", (unsigned long) val);
     output(buf);
   }
 }
@@ -1154,7 +1156,7 @@ void say(id)
     else if (isLit(id))
       saylit(id);
     else {
-      sprintf(str, "Can't SAY item (%ld).", id);
+      sprintf(str, "Can't SAY item (%ld).", (unsigned long) id);
       syserr(str);
     }
   }
@@ -1251,7 +1253,7 @@ void describe(id)
   else if (isAct(id))
     dscract(id);
   else {
-    sprintf(str, "Can't DESCRIBE item (%ld).", id);
+    sprintf(str, "Can't DESCRIBE item (%ld).", (unsigned long) id);
     syserr(str);
   }
 
@@ -1275,7 +1277,7 @@ void use(act, scr)
   char str[80];
 
   if (!isAct(act)) {
-    sprintf(str, "Item is not an Actor (%ld).", act);
+    sprintf(str, "Item is not an Actor (%ld).", (unsigned long) act);
     syserr(str);
   }
 
@@ -1487,10 +1489,15 @@ void look()
 
   if (anyOutput)
     para();
+
+glk_set_style(style_Subheader);
+needsp = FALSE;
   say(cur.loc);
   needsp = FALSE;
   output(".");
+glk_set_style(style_Normal);
   newline();
+needsp = FALSE;
   describe(cur.loc);
   dscrobjs();
   dscracts();
@@ -1519,6 +1526,17 @@ void save()
   char str[256];
   AtrElem *atr;
 
+#ifdef GLK_MODULE_FILEREF_GET_NAME
+
+  frefid_t fref;
+  fref = glk_fileref_create_by_prompt(fileusage_SavedGame, filemode_Write, 0);
+  if (fref == NULL)
+    error(M_SAVEFAILED);
+  strcpy(str, garglk_fileref_get_name(fref));
+  glk_fileref_destroy(fref);
+
+#else
+
   /* First save ? */
   if (savfnm[0] == '\0') {
     strcpy(savfnm, advnam);
@@ -1527,11 +1545,15 @@ void save()
   prmsg(M_SAVEWHERE);
   sprintf(str, "(%s) : ", savfnm);
   output(str);
+
 #ifdef USE_READLINE
   readline(str);
 #else
   gets(str);
 #endif
+
+#endif
+
   if (str[0] == '\0')
     strcpy(str, savfnm);
   col = 1;
@@ -1599,12 +1621,23 @@ void restore(void)
 void restore()
 #endif
 {
-  int i;
+  int i,tmp;
   FILE *savfil;
   char str[256];
   AtrElem *atr;
   char savedVersion[4];
   char savedName[256];
+
+#ifdef GLK_MODULE_FILEREF_GET_NAME
+
+  frefid_t fref;
+  fref = glk_fileref_create_by_prompt(fileusage_SavedGame, filemode_Read, 0);
+  if (fref == NULL)
+    error(M_SAVEFAILED);
+  strcpy(str, garglk_fileref_get_name(fref));
+  glk_fileref_destroy(fref);
+
+#else
 
   /* First save ? */
   if (savfnm[0] == '\0') {
@@ -1619,6 +1652,9 @@ void restore()
 #else
   gets(str);
 #endif
+
+#endif
+
   if (str[0] == '\0')
     strcpy(str, savfnm);
   col = 1;
@@ -1628,7 +1664,7 @@ void restore()
     error(M_SAVEMISSING);
   strcpy(savfnm, str);          /* Save it for future use */
 
-  fread((void *)&savedVersion, sizeof(Aword), 1, savfil);
+  tmp = fread((void *)&savedVersion, sizeof(Aword), 1, savfil);
   /* 4f - save file version check doesn't seem to work on PC's! */
   if (strncmp(savedVersion, header->vers, 4)) {
     fclose(savfil);
@@ -1644,45 +1680,45 @@ void restore()
   }
 
   /* Restore current values */
-  fread((void *)&cur, sizeof(cur), 1, savfil);
+  tmp = fread((void *)&cur, sizeof(cur), 1, savfil);
   /* Restore actors */
   for (i = ACTMIN; i <= ACTMAX; i++) {
-    fread((void *)&acts[i-ACTMIN].loc, sizeof(Aword), 1, savfil);
-    fread((void *)&acts[i-ACTMIN].script, sizeof(Aword), 1, savfil);
-    fread((void *)&acts[i-ACTMIN].step, sizeof(Aword), 1, savfil);
-    fread((void *)&acts[i-ACTMIN].count, sizeof(Aword), 1, savfil);
+    tmp = fread((void *)&acts[i-ACTMIN].loc, sizeof(Aword), 1, savfil);
+    tmp = fread((void *)&acts[i-ACTMIN].script, sizeof(Aword), 1, savfil);
+    tmp = fread((void *)&acts[i-ACTMIN].step, sizeof(Aword), 1, savfil);
+    tmp = fread((void *)&acts[i-ACTMIN].count, sizeof(Aword), 1, savfil);
     if (acts[i-ACTMIN].atrs)
       for (atr = (AtrElem *) addrTo(acts[i-ACTMIN].atrs); !endOfTable(atr); atr++)
-	fread((void *)&atr->val, sizeof(Aword), 1, savfil);
+	tmp = fread((void *)&atr->val, sizeof(Aword), 1, savfil);
   }
 
   /* Restore locations */
   for (i = LOCMIN; i <= LOCMAX; i++) {
-    fread((void *)&locs[i-LOCMIN].describe, sizeof(Aword), 1, savfil);
+    tmp = fread((void *)&locs[i-LOCMIN].describe, sizeof(Aword), 1, savfil);
     if (locs[i-LOCMIN].atrs)
       for (atr = (AtrElem *) addrTo(locs[i-LOCMIN].atrs); !endOfTable(atr); atr++)
-	fread((void *)&atr->val, sizeof(Aword), 1, savfil);
+	tmp = fread((void *)&atr->val, sizeof(Aword), 1, savfil);
   }
 
   /* Restore objects */
   for (i = OBJMIN; i <= OBJMAX; i++) {
-    fread((void *)&objs[i-OBJMIN].loc, sizeof(Aword), 1, savfil);
+    tmp = fread((void *)&objs[i-OBJMIN].loc, sizeof(Aword), 1, savfil);
     if (objs[i-OBJMIN].atrs)
       for (atr = (AtrElem *) addrTo(objs[i-OBJMIN].atrs); !endOfTable(atr); atr++)
-	fread((void *)&atr->val, sizeof(atr->val), 1, savfil);
+	tmp = fread((void *)&atr->val, sizeof(atr->val), 1, savfil);
   }
 
   /* Restore the eventq */
   etop = 0;
   do {
-    fread((void *)&eventq[etop], sizeof(eventq[0]), 1, savfil);
+    tmp = fread((void *)&eventq[etop], sizeof(eventq[0]), 1, savfil);
     etop++;
   } while (eventq[etop-1].time != 0);
   etop--;
 
   /* Restore scores */
   for (i = 0; scores[i] != EOF; i++)
-    fread((void *)&scores[i], sizeof(Aword), 1, savfil);
+    tmp = fread((void *)&scores[i], sizeof(Aword), 1, savfil);
 
   fclose(savfil);
 }
@@ -1742,10 +1778,10 @@ Abool btw(val, low, high)
   */
 
 #ifdef _PROTOTYPES_
-Aword contains(Aword string, Aword substring)
+Aword contains(Aptr string, Aptr substring)
 #else
 Aword contains(string, substring)
-     Aword string, substring;;
+     Aptr string, substring;;
 #endif
 {
   Abool found;
