@@ -77,12 +77,17 @@ class geas_implementation : public GeasRunner
   std::vector <std::string> function_args;
   std::string this_object;
   v2string current_places;
+  bool is_running_;
+  Logger logger;
   
 public:
-  geas_implementation (GeasInterface *in_gi) : GeasRunner (in_gi), undo_buffer (20) {}
+  geas_implementation (GeasInterface *in_gi)
+     : GeasRunner (in_gi), undo_buffer (20), is_running_(true) {}
   //void set_game (std::string s);
   void set_game (std::string s);
 
+  bool is_running () const;
+  std::string get_banner ();
   void run_command (std::string);
   bool try_match (std::string s, bool, bool);
   match_rv match_command (std::string input, std::string action) const;
@@ -120,7 +125,7 @@ public:
 
   std::string displayed_name (std::string object) const;
   //std::string get_obj_name (const std::vector<std::string> &args) const;
-  std::string geas_implementation::get_obj_name (std::string name, const std::vector<std::string> &where, bool is_internal) const;
+  std::string get_obj_name (std::string name, const std::vector<std::string> &where, bool is_internal) const;
 
   bool has_obj_property (std::string objname, std::string propname) const;
   bool get_obj_property (std::string objname, std::string propname,

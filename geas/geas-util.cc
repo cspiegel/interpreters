@@ -191,7 +191,7 @@ vector<string> split_param (string s)
   for (;;)
     {
       c2 = s.find (';', c1);
-      if (c2 == string::npos)
+      if (c2 == -1)
 	{
 	  rv.push_back (trim (s.substr (c1)));
 	  return rv;
@@ -222,4 +222,42 @@ void show_split (string s)
   for (uint i = 0; i < tmp.size(); i ++)
     cerr << "<" << tmp[i] << ">, ";
   cerr << "\n";
+}
+
+Logger::Nullstreambuf Logger::cnull;
+
+Logger::Logger ()
+    : logfilestr_(NULL), cerrbuf_(NULL)
+{
+  cerr.flush ();
+
+  const char *const logfile = getenv ("GEAS_LOGFILE");
+  if (logfile)
+    {
+      ofstream *filestr = new ofstream (logfile);
+      if (filestr->fail ())
+        delete filestr;
+      else
+        {
+          logfilestr_ = filestr;
+          cerrbuf_ = cerr.rdbuf (filestr->rdbuf ());
+        }
+    }
+
+  if (!cerrbuf_)
+    cerrbuf_ = cerr.rdbuf (&cnull);
+}
+
+Logger::~Logger () {
+  cerr.flush ();
+
+  cerr.rdbuf (cerrbuf_);
+  cerrbuf_ = NULL;
+
+  if (logfilestr_)
+    {
+      logfilestr_->close ();
+      delete logfilestr_;
+      logfilestr_ = NULL;
+    }
 }

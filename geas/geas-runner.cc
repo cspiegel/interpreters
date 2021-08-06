@@ -79,7 +79,7 @@ void geas_implementation::set_svar (string varname, string varval)
 {
   cerr << "set_svar (" << varname << ", " << varval << ")\n";
   uint i1 = varname.find ('[');
-  if (i1 == string::npos)
+  if (i1 == -1)
     return set_svar (varname, 0, varval); 
   if (varname[varname.length() - 1] != ']')
     {
@@ -138,7 +138,7 @@ void geas_implementation::set_svar (string varname, uint index, string varval)
 string geas_implementation::get_svar (string varname) const 
 { 
   uint i1 = varname.find ('[');
-  if (i1 == string::npos)
+  if (i1 == -1)
     return get_svar (varname, 0); 
   if (varname[varname.length() - 1] != ']')
     {
@@ -168,7 +168,7 @@ string geas_implementation::get_svar (string varname, uint index) const
 int geas_implementation::get_ivar (string varname) const
 {
   uint i1 = varname.find ('[');
-  if (i1 == string::npos)
+  if (i1 == -1)
     return get_ivar (varname, 0); 
   if (varname[varname.length() - 1] != ']')
     {
@@ -195,7 +195,7 @@ int geas_implementation::get_ivar (string varname, uint index) const
 void geas_implementation::set_ivar (string varname, int varval) 
 {
   uint i1 = varname.find ('[');
-  if (i1 == string::npos)
+  if (i1 == -1)
     return set_ivar (varname, 0, varval); 
   if (varname[varname.length() - 1] != ']')
     {
@@ -346,7 +346,7 @@ bool geas_implementation::get_obj_property(string obj, string prop,
 	    return true;
 	  }
 	uint index = dat.find ('=');
-	if (index != string::npos && ci_equal (dat.substr (0, index), is_prop))
+	if (index != -1 && ci_equal (dat.substr (0, index), is_prop))
 	  {
 	    string_rv = dat.substr (index+1);
 	    return true;
@@ -565,7 +565,7 @@ vector<vector<string> > geas_implementation::get_places (string room)
 	    }
 	  uint i = dest_param.find (';');
 	  string dest, prefix = "";
-	  if (i == string::npos)
+	  if (i == -1)
 	    dest = trim (dest_param);
 	  else
 	    {
@@ -740,7 +740,7 @@ void geas_implementation::look()
       if ((tmp = get_svar ("quest.doorways.places")) != "")
 	print_formatted ("You can go to " + tmp + ".");
       if ((tmp = get_svar ("quest.lookdesc")) != "")
-	print_formatted ("|b" + tmp + "|xb");
+	print_formatted (tmp);
     }
 }      
 
@@ -750,8 +750,10 @@ void geas_implementation::set_game (string s)
   try 
     {
       gf = read_geas_file (gi, s);
-      if (gf.blocks.size() == 0)
+      if (gf.blocks.size() == 0) {
+        is_running_ = false;
 	return;
+      }
       //print_formatted ("Ready...|n|cbblack|crred|clblue|cggreen|cyyellow|n|uunderlined: |cbblack|crred|clblue|cggreen|cyyellow|xu|n");
       //cerr << "Read game " << gf << endl;
       uint tok_start, tok_end;
@@ -1043,7 +1045,7 @@ void geas_implementation::regen_var_dirs()
       uint i = out_dest.find (';');
       cerr << ", i == " << i;
       string prefix = "";
-      if (i != string::npos) 
+      if (i != -1) 
 	{
 	  prefix = trim (out_dest.substr (0, i-1));
 	  out_dest = trim (out_dest.substr (i + 1));
@@ -1104,7 +1106,7 @@ string geas_implementation::substitute_synonyms (string s) const
 	{
 	  string line = gb->data[i];
 	  uint index = line.find ('=');
-	  if (index == string::npos)
+	  if (index == -1)
 	    continue;
 	  vector<string> words = split_param (line.substr (0, index));
 	  string rhs = trim (line.substr (index + 1));
@@ -1116,7 +1118,7 @@ string geas_implementation::substitute_synonyms (string s) const
 	      if (lhs == "")
 		continue;
 	      uint k = 0;
-	      while ((k = s.find (lhs, k)) != string::npos)
+	      while ((k = s.find (lhs, k)) != -1)
 		{
 		  uint end_index = k + lhs.length();
 		  if ((k == 0 || s[k-1] == ' ') &&
@@ -1134,10 +1136,61 @@ string geas_implementation::substitute_synonyms (string s) const
   cerr << "substitute_synonyms (" << orig << ") -> '" << s << "'\n";
   return s;
 }
+ 
+bool geas_implementation::is_running () const
+{
+  return is_running_;
+}
+
+std::string geas_implementation::get_banner ()
+{
+  string banner;
+  const GeasBlock *gb = gf.find_by_name ("game", "game");
+  if (gb)
+    {
+      string line = gb->data[0];
+      uint c1, c2;
+      string tok = first_token (line, c1, c2);
+      tok = next_token (line, c1, c2);
+      tok = next_token (line, c1, c2);
+      if (is_param (tok))
+        {
+          banner = eval_param (tok);
+
+          for (uint i = 0; i < gb->data.size(); i ++)
+            {
+              line = gb->data[i];
+              if (first_token (line, c1, c2) == "game" &&
+                  next_token (line, c1, c2) == "version" &&
+                  is_param (tok = next_token (line, c1, c2)))
+                {
+                  banner += ", v";
+                  banner += eval_param (tok);
+                }
+            }
+  
+          for (uint i = 0; i < gb->data.size(); i ++)
+            {
+               line = gb->data[i];
+               if (first_token (line, c1, c2) == "game" &&
+                   next_token (line, c1, c2) == "author" &&
+                   is_param (tok = next_token (line, c1, c2)))
+                {
+                  banner += " | ";
+                  banner += eval_param (tok);
+                }
+            }
+        }
+    }
+  return banner;
+}
 
 void geas_implementation::run_command (string s)
 {
   /* if s == "restore" or "restart" or "quit" or "undo" */
+
+  if (!is_running_)
+    return;
 
   print_newline();
   print_normal("> " + s);
@@ -1879,10 +1932,10 @@ bool geas_implementation::try_match (string cmd, bool is_internal, bool is_norma
       else
 	{
 	  c1 = line.find ('<');
-	  if (c1 != string::npos)
+	  if (c1 != -1)
 	    c2 = line.find ('>', c1);
 
-	  if (c1 == string::npos || c2 == string::npos)
+	  if (c1 == -1 || c2 == -1)
 	    gi->debug_print ("Bad out line: " + line);
 	  else
 	    {
@@ -1898,7 +1951,7 @@ bool geas_implementation::try_match (string cmd, bool is_internal, bool is_norma
 		  assert (is_param(tmp));
 		  tmp = param_contents (tmp);
 		  c1 = tmp.find (';');
-		  if (c1 == string::npos)
+		  if (c1 == -1)
 		    goto_room (trim (tmp));
 		  else
 		    goto_room (trim (tmp.substr (c1+1)));
@@ -1907,18 +1960,6 @@ bool geas_implementation::try_match (string cmd, bool is_internal, bool is_norma
 	}
       return true;
     }
-
-  for (uint i = 0; i < current_places.size(); i ++)
-    if (cmd == "go to " + current_places[i][1] ||
-	cmd == "go to " + current_places[i][2])
-      {
-	if (current_places[i].size() == 5)
-	  run_script_as (state.location, current_places[i][4]);
-	//run_script (current_places[i][4]);
-	else
-	  goto_room (current_places[i][3]);
-	return true;
-      }
 
   for (uint i = 0; i < ARRAYSIZE(dir_names); i ++)
     if (cmd == dir_names[i] || cmd == "go " + dir_names[i] ||
@@ -1938,13 +1979,34 @@ bool geas_implementation::try_match (string cmd, bool is_internal, bool is_norma
 	else 
 	  {
 	    uint index = tok.find (';');
-	    if (index == string::npos)
+	    if (index == -1)
 	      goto_room (trim (tok));
 	    else
 	      goto_room (trim (tok.substr(index+1)));
 	  }
 	return true;
       }
+
+  if ((match = match_command (cmd, "go to #@room#")) ||
+      (match = match_command (cmd, "go #@room#")))
+    {
+      assert (match.bindings.size() == 1);
+      string destination = match.bindings[0].var_text;
+      for (uint i = 0; i < current_places.size(); i ++) {
+	if (ci_equal(destination, current_places[i][1]) ||
+	    ci_equal(destination, current_places[i][2]))
+	  {
+	    if (current_places[i].size() == 5)
+	      run_script_as (state.location, current_places[i][4]);
+	      //run_script (current_places[i][4]);
+	    else
+	      goto_room (current_places[i][3]);
+	    return true;
+	  }
+      }
+      display_error ("badplace", destination);
+      return true;
+    }
 
   if (ci_equal (cmd, "inventory") || ci_equal (cmd, "i"))
     {
@@ -2029,8 +2091,8 @@ bool geas_implementation::try_match (string cmd, bool is_internal, bool is_norma
   
   if (ci_equal (cmd, "quit"))
     {
-      exit(0);
-      // TODO 
+      is_running_ = false;
+      return true;
     }
 
   return false;
@@ -2064,12 +2126,13 @@ void geas_implementation::run_script (string s, string &rv)
 
   if (tok[0] == '{')
     {
-      uint brace1, brace2;
-      for (brace1 = 0; brace1 < s.length() && s[brace1] != '{'; brace1 ++)
+      uint brace1 = c1 + 1, brace2;
+      for (brace2 = s.length() - 1; brace2 >= brace1 && s[brace2] != '}'; brace2 --)
 	;
-      for (brace2 = s.length() - 1; brace2 > 0 && s[brace2] != '}'; brace2 --)
-	;
-      run_script (s.substr (brace1 + 1, brace2 - brace1 - 2));
+      if (brace2 >= brace1)
+	run_script (s.substr (brace1, brace2 - brace1));
+      else
+	gi->debug_print ("Unterminated brace block in " + s);
       return;
     }
 
@@ -2084,7 +2147,7 @@ void geas_implementation::run_script (string s, string &rv)
 	}
       tok = eval_param (tok);
       uint index = tok.find (';');
-      if (index == string::npos)
+      if (index == -1)
 	{
 	  gi->debug_print ("Error: no semicolon in " + s);
 	  return;
@@ -2278,7 +2341,7 @@ void geas_implementation::run_script (string s, string &rv)
 	{
 	  for (uint i = 0; i < gb->data.size(); i ++)
 	    {
-	      print_normal (gb->data[i]);
+	      print_formatted (gb->data[i]);
 	      print_newline();
 	    }
 	}
@@ -2297,7 +2360,7 @@ void geas_implementation::run_script (string s, string &rv)
 	}
       string fname = eval_param (tok);
       uint index = fname.find ('(');
-      if (index != string::npos)
+      if (index != -1)
 	{
 	  uint index2 = fname.find (')');
 	  run_procedure (trim (fname.substr (0, index)),
@@ -2362,7 +2425,7 @@ void geas_implementation::run_script (string s, string &rv)
 	}
       tok = eval_param (tok);
       uint index = tok.find (';');
-      if (index != string::npos)
+      if (index != -1)
 	{
 	  string tmp = trim (tok.substr (index+1));
 	  // SENSITIVE?
@@ -2602,7 +2665,7 @@ void geas_implementation::run_script (string s, string &rv)
       int diff;
       uint index = tok.find (';');
       string varname;
-      if (index == string::npos)
+      if (index == -1)
 	{
 	  varname = trim (tok);
 	  diff = 1;
@@ -2665,7 +2728,7 @@ void geas_implementation::run_script (string s, string &rv)
 	}
       tok = eval_param (tok);
       uint index = tok.find (';');
-      if (index == string::npos)
+      if (index == -1)
 	{
 	  gi->debug_print ("No semi in " + tok + " in " + s);
 	  return;
@@ -2785,7 +2848,7 @@ void geas_implementation::run_script (string s, string &rv)
 	  return;
 	}
       bool is_while = (tok == "while");
-      uint start_cond = c2, end_cond = string::npos;
+      uint start_cond = c2, end_cond = (uint) string::npos;
       while ((tok = next_token (s, c1, c2)) != "")
 	{
 	  // SENSITIVE?
@@ -2795,7 +2858,7 @@ void geas_implementation::run_script (string s, string &rv)
 	      break; // TODO: Do I break here?
 	    }
 	}
-      if (end_cond == string::npos)
+      if (end_cond == -1)
 	{
 	  gi->debug_print ("No script found after condition in " + s);
 	  return;
@@ -2868,7 +2931,7 @@ void geas_implementation::run_script (string s, string &rv)
 	    }
 	  tok = eval_param (tok);
 	  uint index = tok.find (';');
-	  if (index == string::npos)
+	  if (index == -1)
 	    {
 	      gi->debug_print ("No semicolon in param in " + s);
 	      return;
@@ -3099,7 +3162,7 @@ bool geas_implementation::eval_cond (string s)
 	}
       tok = eval_param (tok);
       uint index = tok.find (';');
-      if (index == string::npos)
+      if (index == -1)
 	{
 	  gi->debug_print ("Only one argument to property in " + s);
 	  return false;
@@ -3208,7 +3271,7 @@ bool geas_implementation::eval_cond (string s)
       tok = eval_param (tok);
       uint index;
       // SENSITIVE?
-      if ((index = tok.find ("!=;")) != string::npos)
+      if ((index = tok.find ("!=;")) != -1)
 	{
 	  uint index1 = index;
 	  do
@@ -3222,7 +3285,7 @@ bool geas_implementation::eval_cond (string s)
 	  return ci_notequal (trim_braces (trim (tok.substr (0, index - 1))),
 			      trim_braces (trim (tok.substr (index + 3))));
 	}
-      if ((index = tok.find ("lt=;")) != string::npos)
+      if ((index = tok.find ("lt=;")) != -1)
 	{
 	  cerr << "Comparing <" << trim_braces (trim (tok.substr (0, index))) 
 	       << "> < <" << trim_braces (trim (tok.substr (index + 4)))
@@ -3230,16 +3293,16 @@ bool geas_implementation::eval_cond (string s)
 	  return eval_int (tok.substr (0, index - 1))
 	    <= eval_int (tok.substr (index + 4));
 	}
-      if ((index = tok.find ("gt=;")) != string::npos)
+      if ((index = tok.find ("gt=;")) != -1)
 	return eval_int (tok.substr (0, index)) 
 	  >= eval_int (tok.substr (index + 4));
-      if ((index = tok.find ("lt;")) != string::npos)
+      if ((index = tok.find ("lt;")) != -1)
 	return eval_int (tok.substr (0, index)) 
 	  < eval_int (tok.substr (index + 3));
-      if ((index = tok.find ("gt;")) != string::npos)
+      if ((index = tok.find ("gt;")) != -1)
 	return eval_int (tok.substr (0, index)) 
 	  > eval_int (tok.substr (index + 3));
-      if ((index = tok.find (";")) != string::npos)
+      if ((index = tok.find (";")) != -1)
 	{
 	  cerr << "Comparing <" << trim_braces (trim (tok.substr (0, index)))
 	       << "> == <" << trim_braces (trim (tok.substr (index + 1))) 
@@ -3261,7 +3324,7 @@ bool geas_implementation::eval_cond (string s)
 	}
       tok = eval_param (tok);
       uint index = tok.find (';');
-      if (index == string::npos)
+      if (index == -1)
 	{
 	  gi->debug_print ("Only one argument to property in " + s);
 	  return false;
@@ -3470,7 +3533,7 @@ string geas_implementation::run_function (string pname)
 	rv = function_args[1].find (function_args[2], 
 				    parse_int (function_args[0]));
 				    
-      if (rv == string::npos)
+      if (rv == -1)
 	return string_int(rv); // TODO What goes here?
       else
 	return string_int(rv);
@@ -3872,7 +3935,7 @@ string geas_implementation::eval_string (string s)
 	    }
 	  */
 	  //if (j == rv.size())
-	  if (j == string::npos)
+	  if (j == -1)
 	    {
 	      gi->debug_print ("Unmatched $s in " + s);
 	      return rv + s.substr (i);
@@ -3887,12 +3950,12 @@ string geas_implementation::eval_string (string s)
 	  string func_eval;
 
 	  uint paren_open, paren_close;
-	  if ((paren_open = tmp.find ('(')) == string::npos)
+	  if ((paren_open = tmp.find ('(')) == -1)
 	    func_eval = run_function (tmp);
 	  else
 	    {
 	      paren_close = tmp.find (')', paren_open);
-	      if (paren_close == string::npos)
+	      if (paren_close == -1)
 		gi->debug_print ("No matching right paren in " + tmp);
 	      else
 		{

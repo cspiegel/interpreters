@@ -48,7 +48,9 @@ string next_token (string full, uint &tok_start, uint &tok_end, bool cvt_paren)
       return "";
     }
   tok_end = tok_start + 1;
-  if (full[tok_start] == '<')
+  if (full[tok_start] == '{' || full[tok_start] == '}')
+    /* brace is a token by itself */;
+  else if (full[tok_start] == '<')
     {
       while (tok_end < full.length() && full [tok_end] != '>')
 	++ tok_end;
@@ -322,7 +324,7 @@ void GeasFile::read_into (const vector<string> &in_data,
 		  if (rest == "to")
 		    {
 		      rest = next_token (line, t1, t2);
-		      string rhs = line.substr (t2 + 1);
+		      string rhs = line.substr (t2);
 		      // SENSITIVE?
 		      if (rest == "anything")
 			line = lhs + "to anything> " + rhs;
@@ -336,11 +338,11 @@ void GeasFile::read_into (const vector<string> &in_data,
 		    }
 		  // SENSITIVE?
 		  else if (rest == "anything")
-		    line = lhs + "anything> " + line.substr (t2 + 1);
+		    line = lhs + "anything> " + line.substr (t2);
 		  else if (is_param(rest))
-		    line = lhs + param_contents(rest) +"> " +line.substr(t2+1);
+		    line = lhs + param_contents(rest) +"> " +line.substr(t2);
 		  else
-		    line = "action <give> " + line.substr (t1 + 1);
+		    line = "action <give> " + line.substr (t1);
 		}
 	      else		
 		line = "action <" + tok + "> " + line.substr (t1);
@@ -780,7 +782,7 @@ string trim (string s, trim_modes trim_mode)
 bool is_balanced (string str)
 {
   uint index = str.find ('{');
-  if (index == string::npos)
+  if (index == -1)
     return true;
   int depth;
   for (depth = 1, index ++;  depth > 0 && index < str.length();  index ++)
@@ -989,7 +991,7 @@ bool preprocess (vector<string> v, string fname, vector<string> &rv,
 		  string str = v[line];
 		  uint cmp_start;
 		  for (uint cmp = 0; cmp < ARRAYSIZE(comps); cmp ++)
-		    if ((cmp_start = tok.find(comps[cmp][0])) != string::npos)
+		    if ((cmp_start = tok.find(comps[cmp][0])) != -1)
 		      {
 			uint cmp_end = cmp_start + comps[cmp][0].length();
 			//cerr << "Changed str from {" << str << "} to {";
