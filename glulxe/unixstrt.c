@@ -55,6 +55,15 @@ int glkunix_startup_code(glkunix_startup_t *data)
   unsigned char buf[12];
   int res;
 
+#ifdef GARGLK
+  char *cx;
+#endif
+
+#ifdef GARGLK
+  garglk_set_program_name("Glulxe");
+  garglk_set_program_info("Glulxe by Andrew Plotkin");
+#endif
+
   /* Parse out the arguments. They've already been checked for validity,
      and the library-specific ones stripped out.
      As usual for Unix, the zeroth argument is the executable name. */
@@ -124,6 +133,12 @@ int glkunix_startup_code(glkunix_startup_t *data)
     init_err2 = filename;
     return TRUE;
   }
+
+#ifdef GARGLK
+  cx = strrchr(data->argv[1], '/');
+  if (!cx) cx = strrchr(data->argv[1], '\\');
+  garglk_set_story_name(cx ? cx + 1 : data->argv[1]);
+#endif
 
 #if VM_DEBUGGER
   if (gameinfofilename) {
