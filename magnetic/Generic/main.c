@@ -21,7 +21,7 @@
 *
 *     You should have received a copy of the GNU General Public License
 *     along with this program; if not, write to the Free Software
-*     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111, USA.
+*     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 *
 *     Simple ANSI interface main.c
 *
@@ -36,7 +36,7 @@
 #define WIDTH 78
 
 type8 buffer[80], xpos = 0, bufpos = 0, log_on = 0, ms_gfx_enabled, filename[256];
-FILE *logfile1 = 0, *logfile2 = 0;
+FILE *log1 = 0, *log2 = 0;
 
 type8 ms_load_file(type8s *name, type8 *ptr, type16 size)
 {
@@ -90,23 +90,23 @@ type8 ms_save_file(type8s *name, type8 *ptr, type16 size)
 
 void script_write(type8 c)
 {
-	if (log_on == 2 && fputc(c,logfile1) == EOF)
+	if (log_on == 2 && fputc(c,log1) == EOF)
 	{
 		printf("[Problem with script file - closing]\n");
-		fclose(logfile1);
+		fclose(log1);
 		log_on = 0;
 	}
 }
 
 void transcript_write(type8 c)
 {
-	if (logfile2 && c == 0x08 && ftell(logfile2) > 0)
-		fseek(logfile2,-1,SEEK_CUR);
-	else if (logfile2 && fputc(c,logfile2) == EOF)
+	if (log2 && c == 0x08 && ftell(log2) > 0)
+		fseek(log2,-1,SEEK_CUR);
+	else if (log2 && fputc(c,log2) == EOF)
 	{
 		printf("[Problem with transcript file - closing]\n");
-		fclose(logfile2);
-		logfile2 = 0;
+		fclose(log2);
+		log2 = 0;
 	}
 }
 
@@ -189,11 +189,11 @@ type8 ms_getchar(type8 trans)
 			if (log_on == 1)
 			{
 				/* Reading from logfile */
-				if ((c = fgetc(logfile1)) == EOF)
+				if ((c = fgetc(log1)) == EOF)
 				{
 					/* End of log? - turn off */
 					log_on = 0;
-					fclose(logfile1);
+					fclose(log1);
 					c = getchar();
 				}
 				else printf("%c",c); /* print the char as well */
@@ -213,7 +213,7 @@ type8 ms_getchar(type8 trans)
 					{
 						printf("[Closing script file]\n");
 						log_on = 0;
-						fclose(logfile1);
+						fclose(log1);
 					}
 					else if (!strcmp(buf,"undo"))
 						c = 0;
@@ -313,17 +313,17 @@ main(int argc, char **argv)
 					slimit = 655360;
 				break;
 			case 't':
-				if (!(logfile2 = fopen(&argv[i][2],"w")))
+				if (!(log2 = fopen(&argv[i][2],"w")))
 					printf("Failed to open \"%s\" for writing.\n",&argv[i][2]);
 				break; 
 			case 'r':
-				if (logfile1 = fopen(&argv[i][2],"r"))
+				if (log1 = fopen(&argv[i][2],"r"))
 					log_on = 1;
 				else
 					printf("Failed to open \"%s\" for reading.\n",&argv[i][2]);
 				break;
 			case 'w':
-				if (logfile1 = fopen(&argv[i][2],"w"))
+				if (log1 = fopen(&argv[i][2],"w"))
 					log_on = 2;
 				else
 					printf("Failed to open \"%s\" for writing.\n",&argv[i][2]);
@@ -376,9 +376,9 @@ main(int argc, char **argv)
 	}
 	ms_freemem();
 	if (log_on)
-		fclose(logfile1);
-	if (logfile2)
-		fclose(logfile2);
+		fclose(log1);
+	if (log2)
+		fclose(log2);
 	printf("\nExiting.\n");
 	return 0;
 }
