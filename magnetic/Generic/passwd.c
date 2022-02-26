@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <limits.h>
 
 #if UCHAR_MAX==0xff
 typedef unsigned char type8;
