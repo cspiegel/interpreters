@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
  * USA
  */
 
@@ -1827,29 +1827,31 @@ break_y_max:
     }
 }
 
-static void
-gms_graphics_paint_everything (winid_t glk_window,
-			glui32 palette[],
-			type8 off_screen[],
-			int x_offset, int y_offset,
-			type16 width, type16 height)
-{
-	type8		pixel;			/* Reference pixel color */
-	int		x, y;
+#ifdef GARGLK
+  static void
+  gms_graphics_paint_everything (winid_t glk_window,
+			  glui32 palette[],
+			  type8 off_screen[],
+			  int x_offset, int y_offset,
+			  type16 width, type16 height)
+  {
+	  type8		pixel;			/* Reference pixel color */
+	  int		x, y;
 
-	for (y = 0; y < height; y++)
-	{
-	    for (x = 0; x < width; x ++)
-	    {
-		pixel = off_screen[ y * width + x ];
-		glk_window_fill_rect (glk_window,
-			palette[ pixel ],
-			x * GMS_GRAPHICS_PIXEL + x_offset,
-			y * GMS_GRAPHICS_PIXEL + y_offset,
-			GMS_GRAPHICS_PIXEL, GMS_GRAPHICS_PIXEL);
-	    }
-	}
-}
+	  for (y = 0; y < height; y++)
+	  {
+	      for (x = 0; x < width; x ++)
+	      {
+		  pixel = off_screen[ y * width + x ];
+		  glk_window_fill_rect (glk_window,
+			  palette[ pixel ],
+			  x * GMS_GRAPHICS_PIXEL + x_offset,
+			  y * GMS_GRAPHICS_PIXEL + y_offset,
+			  GMS_GRAPHICS_PIXEL, GMS_GRAPHICS_PIXEL);
+	      }
+	  }
+  }
+#endif
 
 /*
  * gms_graphics_timeout()
@@ -4721,8 +4723,8 @@ gms_command_license (const char *argument)
 
   gms_normal_string ("You should have received a copy of the GNU General"
                       " Public License along with this program; if not, write"
-                      " to the Free Software Foundation, Inc., 51 Franklin"
-                      " Street, Fifth Floor, Boston, MA 02110-1301 USA\n\n");
+                      " to the Free Software Foundation, Inc., 59 Temple"
+                      " Place, Suite 330, Boston, MA 02111-1307 USA\n\n");
 
   gms_normal_string ("Please report any bugs, omissions, or misfeatures to ");
   gms_standout_string ("simon_baldwin@yahoo.com");
@@ -5924,15 +5926,13 @@ gms_startup_code (int argc, char *argv[])
     {
       gms_gamefile = argv[argv_index];
       gms_game_message = NULL;
-#ifdef GARGLK
-    {
-      char *s;
-      s = strrchr(gms_gamefile, '\\');
-      if (s) garglk_set_story_name(s+1);
-      s = strrchr(gms_gamefile, '/');
-      if (s) garglk_set_story_name(s+1);
-    }
-#endif
+      #ifdef garglk
+        char *s;
+        s = strrchr(gms_gamefile, '\\');
+        if (s) garglk_set_story_name(s+1);
+        s = strrchr(gms_gamefile, '/');
+        if (s) garglk_set_story_name(s+1);
+      #endif
     }
   else
     {
@@ -6180,7 +6180,7 @@ glk_main (void)
 /*---------------------------------------------------------------------*/
 /*  Glk linkage relevant only to the UNIX platform                     */
 /*---------------------------------------------------------------------*/
-#ifdef TRUE
+#ifdef TARGET_OS_UNIX
 
 #include "glkstart.h"
 

@@ -64,8 +64,6 @@
 #define DIRSEP "/"
 #endif
 
-#include <limits.h>
-
 #if UCHAR_MAX==0xff
 typedef unsigned char type8;
 #else
