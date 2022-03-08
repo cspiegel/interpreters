@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307
  * USA
  */
 
@@ -4724,7 +4724,7 @@ gms_command_license (const char *argument)
   gms_normal_string ("You should have received a copy of the GNU General"
                       " Public License along with this program; if not, write"
                       " to the Free Software Foundation, Inc., 59 Temple"
-                      " Place, Suite 330, Boston, MA 02111-1307 USA\n\n");
+                      " Place, Suite 330, Boston, MA  02111-1307 USA\n\n");
 
   gms_normal_string ("Please report any bugs, omissions, or misfeatures to ");
   gms_standout_string ("simon_baldwin@yahoo.com");
