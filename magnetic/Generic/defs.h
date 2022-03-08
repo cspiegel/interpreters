@@ -35,12 +35,25 @@
 *       correct number of bits on your system !!!
 \*****************************************************************************/
 
-typedef unsigned char  type8;
-typedef signed   char  type8s;
-typedef unsigned short type16;
-typedef signed   short type16s;
-typedef unsigned long  type32;
-typedef signed   long  type32s;
+#include <stdint.h>
+
+typedef uint8_t type8;
+// The name implies a signed type, but this appears to generally be used
+// where "char" normally would (i.e. for C strings); that is, the fact
+// that it is signed does not appear to matter, and making it signed
+// causes all sorts of diagnostics due to the fact that "signed char"
+// and "char" are different types, even if "char" is signed. In any
+// case, making it "char" causes a lot fewer warnings, and regardless of
+// whether it's signed or plain char, the "solution" will be casting,
+// and this requires fewer casts.
+typedef char type8s;
+
+typedef uint16_t type16;
+typedef int16_t type16s;
+
+typedef uint32_t type32;
+typedef int32_t type32s;
+
 
 /****************************************************************************\
 * Compile time switches 
@@ -329,7 +342,7 @@ struct ms_hint
 {
   type16  elcount;
   type16  nodetype;
-  type8 * content;
+  type8s * content;
   type16  links[MAX_HITEMS];
   type16  parent;
 };

@@ -64,9 +64,27 @@
 #define DIRSEP "/"
 #endif
 
+#if UCHAR_MAX==0xff
 typedef unsigned char type8;
+#else
+#error "Can't find an 8-bit integer type"
+#endif
+
+#if SHRT_MAX==0x7fff
 typedef unsigned short type16;
-typedef unsigned long int type32;
+#elif INT_MAX==0x7fff
+typedef unsigned int type16;
+#else
+#error "Can't find a 16-bit integer type"
+#endif
+
+#if INT_MAX==0x7fffffff
+typedef unsigned int type32;
+#elif LONG_MAX==0x7fffffff
+typedef unsigned long type32;
+#else
+#error "Can't find a 32-bit integer type"
+#endif
 
 int fdi, fdo_temp, fdo_gfx;
 char infilemask[FILENAMELENGTH];
