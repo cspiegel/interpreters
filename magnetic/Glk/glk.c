@@ -6230,7 +6230,7 @@ glkunix_startup_code (glkunix_startup_t * data)
 
   return gms_startup_code (data->argc, data->argv);
 }
-#endif /* _unix */
+#endif /* TARGET_OS_UNIX */
 
 
 /*---------------------------------------------------------------------*/
